@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scripto 4K — Script to Video AI Studio</title>
+<meta name="description" content="Turn any script into stunning 4K videos in 60 seconds. AI voices, auto B-roll, avatars, subtitles.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%237c3aed'/><path d='M12 10l12 6-12 6V10z' fill='white'/></svg>">
+<style>
+    :root {
+        --bg: #0b0b14;
+        --bg2: #121223;
+        --bg3: #1a1a30;
+        --card: #18182cDD;
+        --border: rgba(255,255,255,0.08);
+        --border2: rgba(255,255,255,0.14);
+        --text: #ececf5;
+        --muted: #9a9ab8;
+        --muted2: #6d6d8a;
+        --purple: #7c3aed;
+        --purple2: #a855f7;
+        --pink: #ec4899;
+        --cyan: #22d3ee;
+        --green: #10b981;
+        --amber: #f59e0b;
+        --red: #ef4444;
+        --radius: 16px;
+        --radius-sm: 10px;
+        --shadow: 0 16px 60px rgba(0,0,0,0.45);
+        --glow: 0 0 40px rgba(124,58,237,0.25);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+        font-family: ui-sans-serif, -apple-system, "Inter", "SF Pro Display", Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+    body::before{
+        content:'';
+        position:fixed; inset:0; z-index:-2;
+        background: 
+            radial-gradient(1200px 700px at 80% -10%, rgba(124,58,237,0.18), transparent 60%),
+            radial-gradient(900px 600px at -10% 20%, rgba(236,72,153,0.10), transparent 55%),
+            radial-gradient(800px 500px at 10% 100%, rgba(34,211,238,0.08), transparent 50%),
+            var(--bg);
+    }
+    a{color:inherit;text-decoration:none}
+    button{font-family:inherit;cursor:pointer}
+    /* Top Nav */
+    .nav{
+        height:64px;
+        display:flex;align-items:center;justify-content:space-between;
+        padding:0 24px;
+        border-bottom:1px solid var(--border);
+        background: rgba(11,11,20,0.7);
+        backdrop-filter: blur(16px);
+        position: sticky; top:0; z-index:50;
+    }
+    .logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.3px;font-size:18px}
+    .logo-mark{
+        width:34px;height:34px;border-radius:10px;
+        background: linear-gradient(135deg, var(--purple), var(--pink));
+        display:grid;place-items:center;
+        box-shadow: var(--glow);
+    }
+    .nav-links{display:flex;gap:28px;color:var(--muted);font-size:14px}
+    .nav-links a:hover{color:#fff}
+    .nav-right{display:flex;align-items:center;gap:12px}
+    .btn{
+        padding:10px 16px;border-radius:999px;border:1px solid var(--border2);
+        background: var(--bg3); color: var(--text); font-weight:600; font-size:13.5px;
+        transition:.2s;
+    }
+    .btn:hover{border-color:rgba(255,255,255,.25); transform: translateY(-1px)}
+    .btn-primary{
+        background: linear-gradient(135deg, var(--purple), var(--purple2));
+        border:0; color:white;
+        box-shadow: 0 8px 24px rgba(124,58,237,.35);
+    }
+    .btn-primary:hover{box-shadow:0 10px 30px rgba(124,58,237,.5)}
+    .btn-ghost{background:transparent}
+    .pill{font-size:11px;background:rgba(16,185,129,.15);color:#6ee7b7;padding:4px 9px;border-radius:999px;font-weight:700}
+
+    /* App shell */
+    .app{
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 28px 24px 80px;
+    }
+    /* Hero / Studio toggle */
+    .view{display:none}
+    .view.active{display:block}
+
+    /* Landing hero */
+    .hero{
+        padding: 54px 0 30px;
+        text-align:center;
+    }
+    .hero-badge{
+        display:inline-flex;gap:8px;align-items:center;
+        background: rgba(124,58,237,.12);
+        border:1px solid rgba(124,58,237,.3);
+        color:#c4b5fd; padding:7px 14px; border-radius:999px; font-size:12px; font-weight:700;
+    }
+    h1{
+        font-size: clamp(36px, 6vw, 64px);
+        line-height: 1.02;
+        letter-spacing: -1.8px;
+        margin: 18px auto 14px;
+        max-width: 820px;
+        font-weight: 800;
+    }
+    .grad{
+        background: linear-gradient(90deg,#fff 10%, #c4b5fd 40%, #f9a8d4 65%, #67e8f9 100%);
+        -webkit-background-clip:text;background-clip:text;color:transparent;
+    }
+    .sub{
+        color: var(--muted);
+        font-size: 18px;
+        max-width: 640px; margin:0 auto 26px; line-height:1.6
+    }
+    .hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+    .btn-lg{padding:14px 22px;font-size:15px}
+    .trust{display:flex;gap:22px;justify-content:center;color:var(--muted2);font-size:12.5px;margin-top:16px;flex-wrap:wrap}
+    .trust strong{color:var(--muted)}
+
+    /* Mock player card */
+    .hero-preview{
+        margin: 38px auto 10px;
+        max-width: 980px;
+        background: linear-gradient(180deg, #191933, #13132a);
+        border:1px solid var(--border2);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+        overflow:hidden;
+        position:relative;
+    }
+    .preview-top{
+        padding:12px 16px;border-bottom:1px solid var(--border);
+        display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:12.5px
+    }
+    .dots{display:flex;gap:6px}
+    .dot{width:10px;height:10px;border-radius:50%;background:#2a2a48}
+    .preview-body{display:grid;grid-template-columns: 280px 1fr 300px;min-height:460px}
+    @media(max-width:1000px){ .preview-body{grid-template-columns:1fr} .side-hide{ display:none}}
+    
+    .sidebar{
+        border-right:1px solid var(--border);
+        background: rgba(255,255,255,.012);
+        padding:16px;
+    }
+    .side-title{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted2);margin-bottom:10px}
+    .tool-list{display:flex;flex-direction:column;gap:6px}
+    .tool{
+        display:flex;align-items:center;gap:10px;
+        padding:10px 12px;border-radius:12px;color:#c9c9e2;font-size:13.5px;
+        cursor:pointer;border:1px solid transparent;
+    }
+    .tool:hover{background:rgba(255,255,255,.04)}
+    .tool.active{background:rgba(124,58,237,.14);border-color:rgba(124,58,237,.35);color:white}
+    .tool-ico{width:28px;height:28px;border-radius:8px;background:#23233d;display:grid;place-items:center;font-size:14px}
+
+    .center-pane{padding:18px;display:flex;flex-direction:column;gap:14px}
+    .video-frame{
+        aspect-ratio: 16/9;
+        border-radius: 14px;
+        background: #0c0c18;
+        border:1px solid var(--border);
+        position:relative;
+        overflow:hidden;
+        display:grid;place-items:center;
+    }
+    .video-frame-inner{
+        width:100%;height:100%;
+        background: linear-gradient(120deg, #1a1530 0%, #231b43 40%, #2a1f52 100%);
+        display:grid;place-items:center;
+        position:relative;
+    }
+    .play-fab{
+        width:68px;height:68px;border-radius:50%;
+        background: rgba(255,255,255,.1);
+        border:1px solid rgba(255,255,255,.2);
+        backdrop-filter: blur(8px);
+        display:grid;place-items:center;font-size:26px;
+        cursor:pointer; transition:.2s;
+    }
+    .play-fab:hover{transform:scale(1.06)}
+    .frame-label{
+        position:absolute;left:14px;top:14px;
+        background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12);
+        padding:6px 10px;border-radius:999px;font-size:11px;color:#d8d8ef;font-weight:600
+    }
+    .frame-sub{
+        position:absolute;bottom:26px;left:0;right:0;text-align:center;
+        font-size:19px;font-weight:700;
+        text-shadow:0 2px 16px rgba(0,0,0,.8);
+        padding:0 24px;
+    }
+    .timeline{
+        background: #15152a;
+        border:1px solid var(--border);
+        border-radius:12px;
+        padding:12px;
+    }
+    .timeline-row{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
+    .tl-blocks{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+    .tl-block{height:34px;border-radius:7px;padding:0 12px;display:grid;place-items:center;font-size:11.5px;font-weight:700;background:#222246;border:1px solid rgba(255,255,255,.06)}
+    .tl-block.accent{background: rgba(124,58,237,.22);border-color: rgba(124,58,237,.4);color:#d8b4fe}
+
+    .right-pane{
+        border-left:1px solid var(--border);
+        padding:16px;
+        background: rgba(255,255,255,.012);
+    }
+    .field{margin-bottom:14px}
+    .field label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:7px}
+    .input, select, textarea{
+        width:100%; background:#141428; border:1px solid var(--border2);
+        color:var(--text); padding:11px 12px; border-radius:10px;
+        font-size:13.5px; outline:none;
+    }
+    .input:focus, select:focus, textarea:focus{border-color: #7c3aed}
+    textarea{resize:vertical; min-height:106px; line-height:1.55}
+    .chips{display:flex;flex-wrap:wrap;gap:7px}
+    .chip{padding:6px 10px;border-radius:999px;background:#1d1d37;border:1px solid var(--border);font-size:11.5px;color:#bdbde0;cursor:pointer}
+    .chip.active{background: rgba(124,58,237,.2); border-color: rgba(124,58,237,.45); color:white}
+
+    /* Feature grid */
+    .section{margin-top:64px}
+    .section h2{font-size:34px;letter-spacing:-.8px;text-align:center;margin-bottom:10px}
+    .section p.section-sub{color:var(--muted);text-align:center;max-width:620px;margin:0 auto 28px}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    @media(max-width:900px){ .grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:620px){ .grid{grid-template-columns:1fr}}
+    .card{
+        background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.015));
+        border:1px solid var(--border);
+        border-radius:18px;
+        padding:20px;
+        min-height: 170px;
+    }
+    .card h3{font-size:16.5px;margin:10px 0 8px}
+    .card p{color:var(--muted);font-size:13.8px;line-height:1.6}
+    .icon-box{
+        width:40px;height:40px;border-radius:11px;
+        background: linear-gradient(135deg, #2a2250, #221a3d);
+        border:1px solid rgba(255,255,255,.08);
+        display:grid;place-items:center;
+        font-size:18px;
+    }
+
+    /* Pricing */
+    .pricing{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:24px}
+    @media(max-width:950px){ .pricing{grid-template-columns:1fr} }
+    .price-card{
+        background: linear-gradient(180deg, #18182f, #15152a);
+        border:1px solid var(--border2);
+        border-radius: 22px;
+        padding:26px;
+        position:relative;
+        overflow:hidden;
+    }
+    .price-card.popular{
+        border-color: rgba(168,85,247,.6);
+        box-shadow: 0 0 50px rgba(124,58,237,.18), inset 0 1px 0 rgba(255,255,255,.06);
+        transform: scale(1.02);
+    }
+    .price-badge{
+        position:absolute;right:16px;top:16px;background: linear-gradient(135deg, var(--purple), var(--pink));
+        font-size:11px;font-weight:800;padding:5px 10px;border-radius:999px;
+    }
+    .price-name{font-weight:800;font-size:17px}
+    .price-amt{font-size:40px;font-weight:800;letter-spacing:-1px;margin:8px 0}
+    .price-amt small{font-size:14px;color:var(--muted);font-weight:600}
+    .price-note{color:var(--muted);font-size:13px;margin-bottom:16px}
+    .feat-list{list-style:none;display:flex;flex-direction:column;gap:9px;font-size:13.5px;color:#c8c8e2}
+    .feat-list li{display:flex;gap:9px}
+    .check{color:#34d399;font-weight:800}
+    .price-cta{margin-top:18px}
+    .btn-full{width:100%;justify-content:center;display:flex}
+
+    /* Currency toggle */
+    .currency-toggle{
+        display:inline-flex; background:#141428; border:1px solid var(--border2);
+        border-radius:999px; padding:4px; gap:4px; margin-bottom:6px;
+    }
+    .currency-toggle button{
+        border:0; background:transparent; color:var(--muted); 
+        padding:6px 12px; border-radius:999px; font-weight:700; font-size:12.5px;
+    }
+    .currency-toggle button.active{ background:#fff; color:#111; }
+
+    /* Studio full app */
+    .studio{
+        display:grid;
+        grid-template-columns: 300px 1fr 340px;
+        gap:18px;
+        min-height: 720px;
+    }
+    @media(max-width:1100px){ .studio{grid-template-columns: 260px 1fr} .studio-right{display:none} }
+    @media(max-width:760px){ .studio{grid-template-columns:1fr} .studio-left{display:none} }
+    .panel{
+        background: linear-gradient(180deg, rgba(255,255,255,.032), rgba(255,255,255,.016));
+        border:1px solid var(--border);
+        border-radius:18px;
+    }
+    .panel-body{padding:16px}
+    .studio-tabs{display:flex;gap:6px;padding:12px 12px 0;flex-wrap:wrap}
+    .studio-tab{padding:8px 12px;border-radius:999px;font-size:12.5px;color:var(--muted);cursor:pointer;border:1px solid transparent}
+    .studio-tab.active{background:rgba(124,58,237,.18);border-color:rgba(124,58,237,.35);color:white}
+    .script-textarea{min-height:300px;font-size:14.5px;line-height:1.7}
+    .mini-meta{display:flex;gap:12px;color:var(--muted2);font-size:12px;margin-top:8px}
+    .scenes{display:flex;flex-direction:column;gap:10px;max-height:520px;overflow:auto;padding-right:4px}
+    .scene{
+        background:#141428;border:1px solid var(--border);border-radius:12px;padding:12px;
+        cursor:pointer;
+    }
+    .scene.active{border-color: rgba(124,58,237,.5); background: rgba(124,58,237,.08)}
+    .scene small{color:var(--muted2)}
+    .voice-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .voice{
+        padding:10px;border-radius:10px;background:#141428;border:1px solid var(--border);font-size:12.5px;cursor:pointer
+    }
+    .voice.active{border-color:rgba(124,58,237,.5); background: rgba(124,58,237,.1)}
+    .media-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .thumb{
+        aspect-ratio:16/9;border-radius:9px;background:#1b1b33;border:1px solid var(--border);
+        display:grid;place-items:center;font-size:11px;color:var(--muted2);cursor:pointer;overflow:hidden
+    }
+    .thumb:hover{border-color:rgba(255,255,255,.2)}
+    .kpi-row{display:flex;gap:10px;flex-wrap:wrap}
+    .kpi{background:#141428;border:1px solid var(--border);border-radius:12px;padding:10px 12px;font-size:12px;color:var(--muted)}
+    .kpi strong{display:block;color:white;font-size:16px}
+
+    /* Export modal */
+    .modal-backdrop{
+        position:fixed;inset:0;background:rgba(3,3,10,.65);backdrop-filter: blur(8px);
+        display:none;align-items:center;justify-content:center;z-index:80;padding:20px;
+    }
+    .modal-backdrop.open{display:flex}
+    .modal{
+        width:100%;max-width:640px;
+        background: linear-gradient(180deg, #1b1b33, #16162a);
+        border:1px solid var(--border2);
+        border-radius:20px;
+        padding:24px;
+        box-shadow: var(--shadow);
+    }
+    .modal h3{font-size:22px}
+    .export-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+    @media(max-width:560px){.export-grid{grid-template-columns:1fr}}
+    .progress{height:10px;background:#141428;border-radius:999px;overflow:hidden;border:1px solid var(--border)}
+    .progress > div{height:100%;width:0%;background: linear-gradient(90deg, var(--purple), var(--pink)); transition: width .25s}
+
+    footer{
+        margin-top:64px;border-top:1px solid var(--border);color:var(--muted2);
+        padding:32px 24px;text-align:center;font-size:12.5px
+    }
+    .small{font-size:12px;color:var(--muted2)}
+    .hr{height:1px;background:var(--border);margin:14px 0}
+    .switch{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--muted)}
+    .toggle{width:38px;height:22px;background:#2a2a48;border-radius:999px;position:relative;cursor:pointer;border:1px solid var(--border)}
+    .toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:#9a9ab8;border-radius:50%;transition:.2s}
+    .toggle.on{background:rgba(124,58,237,.5)}
+    .toggle.on::after{left:18px;background:white}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .toast{
+        position:fixed;right:18px;bottom:18px;background:#16162b;border:1px solid var(--border2);
+        padding:12px 14px;border-radius:12px;font-size:13px;display:none;z-index:99;box-shadow:var(--shadow)
+    }
+    .toast.show{display:block}
+    .badge-new{font-size:10px;background:#f59e0b22;color:#fbbf24;padding:2px 6px;border-radius:6px;margin-left:6px;font-weight:800}
+
+    /* Pay modal specific */
+    .pay-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+    @media(max-width:560px){.pay-grid{grid-template-columns:1fr}}
+    .pay-btn{
+        display:flex;align-items:center;gap:12px;
+        padding:14px 16px;border-radius:14px;
+        background:#141428;border:1px solid var(--border2);
+        font-weight:700;font-size:14.5px;cursor:pointer;
+        transition:.15s; color:white; width:100%; text-align:left;
+    }
+    .pay-btn:hover{border-color:rgba(255,255,255,.28); transform: translateY(-1px); background:#19193a}
+    .pay-icon{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:18px;background:#23234a;border:1px solid var(--border)}
+    .pay-btn small{display:block;font-weight:500;color:var(--muted);font-size:11.8px;margin-top:2px}
+    .upi-box{
+        background:#101025;border:1px dashed var(--border2);border-radius:14px;
+        padding:16px; text-align:center; margin-top:12px;
+    }
+    .qr-fake{
+        width:160px;height:160px;margin:8px auto;border-radius:12px;
+        background:
+          repeating-linear-gradient(0deg, #fff 0 4px, #000 4px 8px),
+          repeating-linear-gradient(90deg, #fff 0 4px, #000 4px 8px);
+        opacity:.9; border:8px solid white;
+    }
+</style>
+<!-- Razorpay Checkout - for UPI / GPay / PhonePe / Cards / NetBanking in India -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+
+<nav class="nav">
+    <div class="logo" onclick="go('landing')" style="cursor:pointer">
+        <div class="logo-mark">▶</div>
+        <span>Scripto 4K</span>
+        <span class="pill">AI Studio</span>
+    </div>
+    <div class="nav-links" id="navLinks">
+        <a href="#" onclick="go('landing');return false">Product</a>
+        <a href="#" onclick="go('studio');return false">Studio</a>
+        <a href="#" onclick="go('pricing');return false">Pricing</a>
+        <a href="#" onclick="toast('API docs coming soon')">API</a>
+        <a href="#" onclick="toast('120+ languages, 600+ voices')">Voices</a>
+    </div>
+    <div class="nav-right">
+        <button class="btn btn-ghost" onclick="toast('Signed in as demo@scripto.ai')">Sign in</button>
+        <button class="btn btn-primary" onclick="go('studio')">Open Studio</button>
+    </div>
+</nav>
+
+<div class="app">
+
+    <!-- LANDING VIEW -->
+    <div id="view-landing" class="view active">
+        <section class="hero">
+            <div class="hero-badge">✨ NEW  •  Script-to-Video 2.5  •  Real 4K 60fps</div>
+            <h1>Turn any <span class="grad">script into 4K video</span><br> in about 60 seconds.</h1>
+            <p class="sub">AI voices, auto B-roll, talking avatars, captions, music — fully editable. Export YouTube, TikTok, Reels, Ads in one click. No watermark on Plus.</p>
+            <div class="hero-cta">
+                <button class="btn btn-primary btn-lg" onclick="go('studio')">Start creating free —</button>
+                <button class="btn btn-lg" onclick="go('pricing')">See pricing</button>
+            </div>
+            <div class="trust">
+                <span>✓ UPI • GPay • PhonePe</span>
+                <span>✓ 4K UHD export</span>
+                <span><strong>12,430 videos</strong> made today</span>
+                <span>✓ Commercial license</span>
+            </div>
+        </section>
+
+        <!-- Interactive Studio Preview -->
+        <div class="hero-preview">
+            <div class="preview-top">
+                <div style="display:flex;align-items:center;gap:12px">
+                    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+                    <span>scripto_studio.cannes_launch.script</span>
+                </div>
+                <div style="display:flex;gap:14px;align-items:center">
+                    <span>Auto-save ✓</span>
+                    <button class="btn btn-primary" style="padding:7px 12px;font-size:12.5px" onclick="openExport()">Export 4K</button>
+                </div>
+            </div>
+            <div class="preview-body">
+                <div class="sidebar side-hide">
+                    <div class="side-title">Tools</div>
+                    <div class="tool-list" id="miniToolList">
+                        <div class="tool active"> <div class="tool-ico">📝</div> Script</div>
+                        <div class="tool"> <div class="tool-ico">🎬</div> Scenes</div>
+                        <div class="tool"> <div class="tool-ico">🎙️</div> Voiceover</div>
+                        <div class="tool"> <div class="tool-ico">🖼️</div> B-roll</div>
+                        <div class="tool"> <div class="tool-ico">💬</div> Captions</div>
+                        <div class="tool"> <div class="tool-ico">🎵</div> Music</div>
+                        <div class="tool"> <div class="tool-ico">🧑‍🎤</div> Avatar <span class="badge-new">NEW</span></div>
+                        <div class="tool"> <div class="tool-ico">🎨</div> Brand Kit</div>
+                    </div>
+                    <div class="hr"></div>
+                    <div class="side-title">Aspect</div>
+                    <div class="chips">
+                        <div class="chip active">16:9</div>
+                        <div class="chip">9:16</div>
+                        <div class="chip">1:1</div>
+                        <div class="chip">4:5</div>
+                    </div>
+                </div>
+
+                <div class="center-pane">
+                    <div class="video-frame">
+                        <div class="video-frame-inner" id="previewArt">
+                            <div class="frame-label">4K • Preview</div>
+                            <div class="play-fab" onclick="toast('Playing preview…')">▶</div>
+                            <div class="frame-sub" id="previewSubtitle">The future of video is text-first.</div>
+                        </div>
+                    </div>
+                    <div class="timeline">
+                        <div class="timeline-row">Timeline • 00:42 • 6 scenes <span style="margin-left:auto">Smart B-roll: On</span></div>
+                        <div class="tl-blocks">
+                            <div class="tl-block accent">Hook</div>
+                            <div class="tl-block">Problem</div>
+                            <div class="tl-block">Solution</div>
+                            <div class="tl-block">Demo</div>
+                            <div class="tl-block">Social Proof</div>
+                            <div class="tl-block">CTA</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="right-pane side-hide">
+                    <div class="field">
+                        <label>Script</label>
+                        <textarea id="miniScript" oninput="updatePreviewSubtitle(this.value)">The future of video is text-first.
+
+Paste your script. Scripto breaks it into scenes, finds perfect B-roll, adds a human voice, burns in captions, and renders in true 4K.
+
+Made for founders, educators, and agencies.</textarea>
+                    </div>
+                    <div class="two-col">
+                        <div class="field">
+                            <label>Voice</label>
+                            <select id="miniVoice">
+                                <option>Emma - Warm US</option>
+                                <option>Liam - Deep UK</option>
+                                <option>Aisha - Friendly</option>
+                                <option>Raj - Hindi/English</option>
+                                <option>Sofia - ES Latam</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Speed</label>
+                            <select><option>1.0x</option><option>0.95x</option><option>1.1x</option></select>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>Style</label>
+                        <div class="chips" id="styleChips">
+                            <div class="chip active">Clean</div>
+                            <div class="chip">Bold</div>
+                            <div class="chip">Cinematic</div>
+                            <div class="chip">Minimal</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-full" onclick="go('studio')">Open in full Studio →</button>
+                    <p class="small" style="margin-top:8px">Free plan: 720p with watermark. Plus $20 / ₹1,699 unlocks 4K.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features -->
+        <section class="section">
+            <h2>Everything you need. Nothing you don't.</h2>
+            <p class="section-sub">Built for creators shipping daily. Scripto does the boring work so you can focus on the story.</p>
+            <div class="grid">
+                <div class="card"><div class="icon-box">📝</div><h3>AI Script Writer</h3><p>Blank page? Type a topic. Scripto writes hooks, outlines, and full scripts in your tone. 38 languages.</p></div>
+                <div class="card"><div class="icon-box">🎙️</div><h3>600+ Ultra-real Voices</h3><p>Neural TTS with emotion control. Clone your own voice in 60s. Multi-speaker & dubbing.</p></div>
+                <div class="card"><div class="icon-box">🎬</div><h3>Auto B-roll & Stock</h3><p>Smart scene matching pulls from 14M+ royalty-free clips, or generate with AI. Auto cut to voice.</p></div>
+                <div class="card"><div class="icon-box">💬</div><h3>Magic Captions</h3><p>98.7% accurate auto-subtitles. 40+ animated styles. Karaoke, emoji, keyword highlights.</p></div>
+                <div class="card"><div class="icon-box">🧑‍🎤</div><h3>AI Talking Avatars</h3><p>140 studio avatars or create your own. Lip-sync perfect. Pro plan.</p></div>
+                <div class="card"><div class="icon-box">🎨</div><h3>Brand Kit & Templates</h3><p>Lock fonts, colors, logo, intro/outro. One-click apply to entire channel.</p></div>
+                <div class="card"><div class="icon-box">⚡</div><h3>True 4K 60fps Render</h3><p>GPU cloud render. H.264 / H.265 / ProRes. SRT, MP4, vertical auto-reframe.</p></div>
+                <div class="card"><div class="icon-box">🔗</div><h3>Bulk, API & Collaboration</h3><p>CSV bulk video, Zapier, REST API. Real-time team comments. Version history.</p></div>
+                <div class="card"><div class="icon-box">📣</div><h3>Direct Publish</h3><p>YouTube, TikTok, Instagram, LinkedIn. Auto titles, hashtags, thumbnails.</p></div>
+            </div>
+        </section>
+
+        <!-- Pricing Teaser -->
+        <section class="section" id="pricing-anchor">
+            <h2>Simple pricing. 4K included.</h2>
+            <p class="section-sub">Pay with UPI, PhonePe, Google Pay, Cards. Try free. Cancel anytime.</p>
+            <div style="text-align:center;margin-bottom:14px">
+                <div class="currency-toggle" id="currencyToggleLanding">
+                    <button class="active" data-cur="USD">USD $</button>
+                    <button data-cur="INR">INR ₹</button>
+                </div>
+            </div>
+            <div class="pricing">
+                <div class="price-card">
+                    <div class="price-name">Free</div>
+                    <div class="price-amt"><span class="p-amt" data-usd="$0" data-inr="₹0">$0</span> <small>/mo</small></div>
+                    <div class="price-note">For trying Scripto out</div>
+                    <ul class="feat-list">
+                        <li><span class="check">✓</span> 5 exports / month, 720p</li>
+                        <li><span class="check">✓</span> Small watermark</li>
+                        <li><span class="check">✓</span> 20 AI voices</li>
+                        <li><span class="check">✓</span> Auto captions</li>
+                        <li><span class="check">✓</span> 2 min max length</li>
+                    </ul>
+                    <div class="price-cta"><button class="btn btn-full" onclick="go('studio')">Start free</button></div>
+                </div>
+
+                <div class="price-card popular">
+                    <div class="price-badge">MOST POPULAR</div>
+                    <div class="price-name">Plus</div>
+                    <div class="price-amt"><span class="p-amt" data-usd="$20" data-inr="₹1,699">$20</span> <small>/mo</small></div>
+                    <div class="price-note">For creators & YouTubers</div>
+                    <ul class="feat-list">
+                        <li><span class="check">✓</span> <strong>True 4K UHD, 60fps</strong></li>
+                        <li><span class="check">✓</span> No watermark, commercial use</li>
+                        <li><span class="check">✓</span> 600+ voices, 38 languages</li>
+                        <li><span class="check">✓</span> 180 export minutes / mo</li>
+                        <li><span class="check">✓</span> 14M stock clips</li>
+                        <li><span class="check">✓</span> Brand Kit + captions styles</li>
+                        <li><span class="check">✓</span> Voice clone (1 voice)</li>
+                        <li><span class="check">✓</span> Auto B-roll & music</li>
+                    </ul>
+                    <div class="price-cta"><button class="btn btn-primary btn-full" onclick="checkout('Plus')">Get Plus — <span class="p-amt-inline" data-usd="$20/mo" data-inr="₹1,699/mo">$20/mo</span></button></div>
+                    <p class="small" style="margin-top:8px;text-align:center">UPI • GPay • PhonePe • Cards</p>
+                </div>
+
+                <div class="price-card">
+                    <div class="price-name">Pro</div>
+                    <div class="price-amt"><span class="p-amt" data-usd="$38.75" data-inr="₹3,299">$38.75</span> <small>/mo</small></div>
+                    <div class="price-note">For teams & agencies</div>
+                    <ul class="feat-list">
+                        <li><span class="check">✓</span> <strong>Everything in Plus</strong></li>
+                        <li><span class="check">✓</span> Unlimited 4K exports</li>
+                        <li><span class="check">✓</span> AI Talking Avatars – 140+</li>
+                        <li><span class="check">✓</span> 10 voice clones</li>
+                        <li><span class="check">✓</span> Team seats ×5, comments</li>
+                        <li><span class="check">✓</span> API + Bulk CSV (10k/mo)</li>
+                        <li><span class="check">✓</span> Brand Kit ×10</li>
+                        <li><span class="check">✓</span> Priority GPU render</li>
+                        <li><span class="check">✓</span> Reseller license</li>
+                    </ul>
+                    <div class="price-cta"><button class="btn btn-primary btn-full" onclick="checkout('Pro')">Get Pro — <span class="p-amt-inline" data-usd="$38.75/mo" data-inr="₹3,299/mo">$38.75/mo</span></button></div>
+                    <p class="small" style="margin-top:8px;text-align:center">UPI • GPay • PhonePe • Cards</p>
+                </div>
+            </div>
+            <p class="small" style="text-align:center;margin-top:14px">All plans include auto-captions, music library, templates, and 24h support. GST 18% extra for India.</p>
+        </section>
+
+        <footer>
+            © 2026 Scripto AI Labs • Made for storytellers • 
+            <a href="#" onclick="go('pricing');return false">Pricing</a> • 
+            <a href="#" onclick="toast('Terms - commercial license included in Plus+')">Terms</a> • 
+            <a href="#" onclick="toast('Privacy - we never train on your scripts')">Privacy</a>
+            <br><br>
+            Payments powered by Razorpay • UPI / PhonePe / Google Pay / Cards / NetBanking
+        </footer>
+    </div>
+
+    <!-- STUDIO VIEW -->
+    <div id="view-studio" class="view">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+            <div>
+                <h2 style="font-size:28px;letter-spacing:-.5px">Video Studio</h2>
+                <div class="small">Project: cannes_launch.script • Auto-saved 4s ago</div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                <div class="kpi"><span>Plan</span><strong>Plus • 4K</strong></div>
+                <div class="kpi"><span>Minutes left</span><strong id="minutesLeft">168 min</strong></div>
+                <button class="btn" onclick="checkout('Pro')">Upgrade to Pro ₹3,299</button>
+                <button class="btn btn-primary" onclick="openExport()">Export 4K</button>
+            </div>
+        </div>
+
+        <div class="studio">
+            <!-- Left -->
+            <div class="panel studio-left">
+                <div class="studio-tabs" id="studioTabs">
+                    <div class="studio-tab active" data-tab="script">Script</div>
+                    <div class="studio-tab" data-tab="scenes">Scenes</div>
+                    <div class="studio-tab" data-tab="voice">Voice</div>
+                    <div class="studio-tab" data-tab="media">Media</div>
+                    <div class="studio-tab" data-tab="style">Style</div>
+                </div>
+                <div class="panel-body">
+                    <!-- Script Tab -->
+                    <div class="tab-pane" id="tab-script">
+                        <div class="field">
+                            <label>Your script — AI will split into scenes</label>
+                            <textarea id="studioScript" class="script-textarea">Hook: Stop wasting 8 hours editing a 60 second video.
+
+Problem: Script to video tools look cheap. Robotic voices. Stocky stock. 1080p max.
+
+Solution: Meet Scripto. Paste your script. We auto-cut B-roll that actually matches, add ultra-real voices in 38 languages, burn in on-brand captions, and render in true 4K.
+
+Proof: 43,000 creators, 2.1M videos rendered last month.
+
+CTA: Start free at scripto.ai. Plus is $20 / ₹1,699, Pro is $38.75 / ₹3,299. Cancel anytime.</textarea>
+                            <div class="mini-meta">
+                                <span id="wordCount">68 words</span>
+                                <span>•</span>
+                                <span id="readTime">≈ 0:28 read</span>
+                                <span>•</span>
+                                <span>EN / HI</span>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap">
+                            <button class="btn" onclick="aiEnhance()">✨ AI Enhance</button>
+                            <button class="btn" onclick="aiHook()">Generate 5 hooks</button>
+                            <button class="btn" onclick="splitScenes()">↔ Split scenes</button>
+                        </div>
+                        <div class="hr"></div>
+                        <div class="field">
+                            <label>Tone</label>
+                            <div class="chips" id="toneChips">
+                                <div class="chip active">Conversational</div>
+                                <div class="chip">Professional</div>
+                                <div class="chip">Excited</div>
+                                <div class="chip">Calm</div>
+                                <div class="chip">Authoritative</div>
+                            </div>
+                        </div>
+                        <div class="two-col">
+                            <div class="field"><label>Language</label>
+                                <select><option>English</option><option>Hindi</option><option>Spanish</option><option>French</option><option>Arabic</option><option>+33 more</option></select>
+                            </div>
+                            <div class="field"><label>Target length</label>
+                                <select><option>Auto</option><option>15s</option><option>30s</option><option>60s</option><option>3 min</option></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scenes Tab -->
+                    <div class="tab-pane" id="tab-scenes" style="display:none">
+                        <div class="scenes" id="sceneList">
+                            <!-- JS fills -->
+                        </div>
+                        <button class="btn" style="margin-top:10px;width:100%" onclick="addScene()">+ Add scene</button>
+                    </div>
+
+                    <!-- Voice Tab -->
+                    <div class="tab-pane" id="tab-voice" style="display:none">
+                        <div class="field">
+                            <label>Search voices — 600+ voices</label>
+                            <input class="input" placeholder="Warm female US, Deep narrator...">
+                        </div>
+                        <div class="voice-grid" id="voiceGrid">
+                            <div class="voice active">Emma • US • Warm</div>
+                            <div class="voice">Liam • UK • Deep</div>
+                            <div class="voice">Aisha • INT • Friendly</div>
+                            <div class="voice">Raj • IN • Clear</div>
+                            <div class="voice">Sofia • ES • Energetic</div>
+                            <div class="voice">Kenji • JP • Calm</div>
+                            <div class="voice">Chloe • AU • Natural</div>
+                            <div class="voice">+ Clone your voice</div>
+                        </div>
+                        <div class="hr"></div>
+                        <div class="two-col">
+                            <div class="field"><label>Speed</label><input class="input" type="range" min="80" max="120" value="100"></div>
+                            <div class="field"><label>Pitch</label><input class="input" type="range" min="80" max="120" value="100"></div>
+                        </div>
+                        <div class="field"><label><input type="checkbox" checked> Add natural pauses</label></div>
+                    </div>
+
+                    <!-- Media Tab -->
+                    <div class="tab-pane" id="tab-media" style="display:none">
+                        <div class="field">
+                            <input class="input" placeholder="Search 14M stock clips… e.g. 'startup office'">
+                        </div>
+                        <div class="media-grid">
+                            <div class="thumb">City Timelapse</div>
+                            <div class="thumb">Typing Closeup</div>
+                            <div class="thumb">Team Meeting</div>
+                            <div class="thumb">Abstract 4K</div>
+                            <div class="thumb">Product Mockup</div>
+                            <div class="thumb">Coffee Shop</div>
+                        </div>
+                        <div class="hr"></div>
+                        <button class="btn btn-full">Upload your media</button>
+                        <p class="small" style="margin-top:8px">AI Auto B-roll is ON — we match clips to your script automatically.</p>
+                    </div>
+
+                    <!-- Style Tab -->
+                    <div class="tab-pane" id="tab-style" style="display:none">
+                        <div class="field"><label>Caption style</label>
+                            <div class="chips">
+                                <div class="chip active">Clean Bold</div>
+                                <div class="chip">Karaoke</div>
+                                <div class="chip">Hormozi</div>
+                                <div class="chip">Subtle</div>
+                            </div>
+                        </div>
+                        <div class="two-col">
+                            <div class="field"><label>Font</label><select><option>Inter Bold</option><option>SF Pro</option><option>Outfit</option></select></div>
+                            <div class="field"><label>Color</label><input class="input" value="#FFFFFF"></div>
+                        </div>
+                        <div class="field"><label>Brand Kit</label>
+                            <select><option>Default - Scripto Purple</option><option>+ New Brand Kit (Pro)</option></select>
+                        </div>
+                        <div class="field">
+                            <div class="switch"><div class="toggle on" onclick="this.classList.toggle('on')"></div> Progress bar</div>
+                            <div class="switch" style="margin-top:8px"><div class="toggle on" onclick="this.classList.toggle('on')"></div> Auto Zoom/Pan (Ken Burns)</div>
+                            <div class="switch" style="margin-top:8px"><div class="toggle on" onclick="this.classList.toggle('on')"></div> Emoji keywords</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center Preview -->
+            <div class="panel">
+                <div class="panel-body">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                        <div style="display:flex;gap:8px">
+                            <div class="chip active">16:9 YouTube</div>
+                            <div class="chip">9:16 Reel</div>
+                            <div class="chip">1:1 Square</div>
+                        </div>
+                        <div class="small">4K Preview • 60fps</div>
+                    </div>
+                    <div class="video-frame" style="min-height:360px">
+                        <div class="video-frame-inner" id="studioPreview">
+                            <div class="frame-label" id="sceneLabel">Scene 1 / 5</div>
+                            <div class="play-fab" onclick="playStudio()">▶</div>
+                            <div class="frame-sub" id="studioSubtitle">Stop wasting 8 hours editing a 60 second video.</div>
+                        </div>
+                    </div>
+                    <div class="timeline" style="margin-top:14px">
+                        <div class="timeline-row">Timeline • Drag to trim • Right-click to split</div>
+                        <div class="tl-blocks" id="studioTimeline">
+                            <div class="tl-block accent">Hook 4.2s</div>
+                            <div class="tl-block">Problem 6.1s</div>
+                            <div class="tl-block">Solution 9.8s</div>
+                            <div class="tl-block">Proof 5.0s</div>
+                            <div class="tl-block">CTA 3.4s</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+                        <button class="btn" onclick="toast('Regenerated B-roll for current scene')">🔁 Re-roll B-roll</button>
+                        <button class="btn" onclick="toast('Voice regenerated')">🎙️ Re-gen Voice</button>
+                        <button class="btn" onclick="toast('Captions synced')">💬 Sync Captions</button>
+                        <button class="btn" onclick="toast('Music lowered to -18 LUFS')">🎵 Auto-mix</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Properties -->
+            <div class="panel studio-right">
+                <div class="panel-body">
+                    <div class="field"><label>Project settings</label></div>
+                    <div class="two-col">
+                        <div class="field"><label>Resolution</label>
+                            <select id="resSelect"><option>3840×2160 • 4K</option><option>2560×1440</option><option>1920×1080</option></select>
+                        </div>
+                        <div class="field"><label>FPS</label>
+                            <select><option>60</option><option>30</option><option>24</option></select>
+                        </div>
+                    </div>
+
+                    <div class="field"><label>Voiceover track</label>
+                        <select><option>Emma - Warm US (Plus)</option><option>Liam - Deep UK</option></select>
+                        <p class="small">Emotion: Confident • Speed 1.0x</p>
+                    </div>
+
+                    <div class="field"><label>Music</label>
+                        <select><option>Upbeat Corporate - No Copyright</option><option>Lo-fi Chill</option><option>Cinematic Build</option><option>None</option></select>
+                        <input type="range" min="0" max="100" value="18" style="width:100%;margin-top:6px">
+                        <p class="small">Duck under voice: -18 LUFS</p>
+                    </div>
+
+                    <div class="field"><label>Subtitles</label>
+                        <div class="switch"><div class="toggle on" onclick="this.classList.toggle('on')"></div> Burn in 4K captions</div>
+                        <div class="switch" style="margin-top:6px"><div class="toggle on" onclick="this.classList.toggle('on')"></div> Highlight keywords</div>
+                    </div>
+
+                    <div class="hr"></div>
+                    <div class="field"><label>AI Avatar (Pro)</label>
+                        <select><option>None - B-roll mode</option><option>Ava - Studio</option><option>Marcus - Office</option><option>Clone Me (Pro)</option></select>
+                        <p class="small">Upgrade to Pro ₹3,299/mo to unlock avatars.</p>
+                    </div>
+
+                    <div class="hr"></div>
+                    <div class="kpi-row">
+                        <div class="kpi"><span>Duration</span><strong>0:28</strong></div>
+                        <div class="kpi"><span>Scenes</span><strong>5</strong></div>
+                        <div class="kpi"><span>Words</span><strong>68</strong></div>
+                    </div>
+                    <button class="btn btn-primary btn-full" style="margin-top:12px" onclick="openExport()">Export 4K Video</button>
+                    <p class="small" style="text-align:center;margin-top:8px">MP4 H.265 • SRT included • ~42 MB</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRICING FULL VIEW -->
+    <div id="view-pricing" class="view">
+        <section class="section" style="margin-top:18px">
+            <h2>Pick your render power</h2>
+            <p class="section-sub">UPI / PhonePe / Google Pay / Cards — All supported. Commercial license included.</p>
+            <div style="text-align:center;margin-bottom:12px;color:var(--muted);font-size:13.5px">
+                <div class="currency-toggle" id="currencyToggleFull">
+                    <button class="active" data-cur="USD">USD</button>
+                    <button data-cur="INR">INR ₹</button>
+                </div>
+                <div style="margin-top:6px">Monthly &nbsp;|&nbsp; <span style="opacity:.75">Yearly — Save 20%</span></div>
+            </div>
+            <div class="pricing">
+                <div class="price-card">
+                    <div class="price-name">Free</div>
+                    <div class="price-amt"><span class="p-amt" data-usd="$0" data-inr="₹0">$0</span></div>
+                    <div class="price-note">Playground</div>
+                    <ul class="feat-list">
+                        <li><span class="check">✓</span> 720p exports, watermark</li>
+                        <li><span class="check">✓</span> 5 exports / mo</li>
+                        <li><span class="check">✓</span> 20 voices</li>
+                        <li><span class="check">✓</span> 2 min max</li>
+                    </ul>
+                    <div class="price-cta"><button class="btn btn-full" onclick="go('studio')">Use Free</button></div>
+                </div>
+                <div class="price-card popular">
+                    <div class="price-badge">BEST VALUE</div>
+                    <div class="price-name">Plus</div>
+                    <div class="price-amt"><span class="p-amt" data-usd="$20" data-inr="₹1,699">$20</span> <small>/mo</small></div>
+                    <div class="price-note">Most creators start here.</div>
+                    <ul class="feat-list">
+                        <li><span class="check">✓</span> 4K UHD 60fps, no watermark</li>
+                        <li><span class="check">✓</span> 180 minutes / month</li>
+                        <li><span class="check">✓</span> 600+ AI voices, 38 langs</li>
+                        <li><span class="check">✓</span> 1x Voice Clone</li>
+                        <li><span class="check">✓</span> 14M stock / AI B-roll</li>
+                        <li><span class="check">✓</span> Captions with styles</li>
+                        <li><span class="check">✓</span> Brand Kit ×1</li>
+                        <li><span class="check">✓</span> Commercial license</li>
+                        <li><span class="check">✓</span> MP4 + SRT</li>
+                    </ul>
+                    <div class="price-cta"><button class="btn btn-primary btn-full" onclick="checkout('Plus')">Start Plus</button></div>
+                    <p class="small" style="margin-top:8px;text-align:center">UPI • GPay • PhonePe • Card</p>
+                </div>
+                <div class="price-card">
+                    <div class="price-name">Pro</div>
+                    <div class="price-amt"><span class="p-amt" data-usd="$38.75" data-inr="₹3,299">$38.75</span> <small>/mo</small></div>
+                    <div class="price-note">For agencies & power users.</div>
+                    <ul class="feat-list">
+                        <li><span class="check">✓</span> Everything in Plus</li>
+                        <li><span class="check">✓</span> Unlimited 4K exports</li>
+                        <li><span class="check">✓</span> AI Talking Avatars 140+</li>
+                        <li><span class="check">✓</span> 10 Voice Clones</li>
+                        <li><span class="check">✓</span> Team seats ×5</li>
+                        <li><span class="check">✓</span> API & Bulk CSV</li>
+                        <li><span class="check">✓</span> 10 Brand Kits</li>
+                        <li><span class="check">✓</span> Priority render queue</li>
+                        <li><span class="check">✓</span> Reseller / client license</li>
+                    </ul>
+                    <div class="price-cta"><button class="btn btn-primary btn-full" onclick="checkout('Pro')">Start Pro</button></div>
+                    <p class="small" style="margin-top:8px;text-align:center">UPI • GPay • PhonePe • Card</p>
+                </div>
+            </div>
+            <div style="max-width:780px;margin:26px auto 0;background: rgba(255,255,255,.03);border:1px solid var(--border);border-radius:16px;padding:18px;color:var(--muted);font-size:13.5px;line-height:1.7">
+                <strong style="color:#fff">All paid plans include:</strong> Auto-captions in 38 languages, 4,000+ copyright-free music tracks, 800+ motion templates, direct publish to YouTube/TikTok/IG, version history, 24h email support, GST invoices • Razorpay secure checkout. Need Enterprise? <a href="#" onclick="toast('Contact sales@scripto.ai')" style="text-decoration:underline;color:#c4b5fd">Contact us</a>.
+            </div>
+        </section>
+    </div>
+
+</div>
+
+<!-- Export Modal -->
+<div class="modal-backdrop" id="exportModal" onclick="if(event.target===this) closeExport()">
+    <div class="modal">
+        <h3>Export 4K Video</h3>
+        <p class="small" style="margin-top:6px">Render in the cloud. Usually ~45 seconds for a 30s video.</p>
+        <div class="export-grid" style="margin-top:16px">
+            <div class="field"><label>Resolution</label>
+                <select id="exportRes"><option>3840×2160 • 4K UHD</option><option>2560×1440 • QHD</option><option>1920×1080 • HD</option><option>1080×1920 • 9:16</option></select>
+            </div>
+            <div class="field"><label>Codec</label>
+                <select><option>H.265 • Small file</option><option>H.264 • Max compatibility</option><option>ProRes • Pro</option></select>
+            </div>
+            <div class="field"><label>Captions</label>
+                <select><option>Burned in</option><option>SRT sidecar</option><option>Both</option><option>None</option></select>
+            </div>
+            <div class="field"><label>FPS</label>
+                <select><option>60</option><option>30</option></select>
+            </div>
+        </div>
+        <div id="exportIdle">
+            <div class="hr"></div>
+            <div style="display:flex;gap:10px;justify-content:flex-end">
+                <button class="btn" onclick="closeExport()">Cancel</button>
+                <button class="btn btn-primary" onclick="startExport()">Start 4K Render →</button>
+            </div>
+        </div>
+        <div id="exportRunning" style="display:none">
+            <div class="hr"></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:8px">
+                <span id="exportStatus">Queuing GPU…</span>
+                <span id="exportPct">0%</span>
+            </div>
+            <div class="progress"><div id="exportBar"></div></div>
+            <p class="small" style="margin-top:10px">Plus plan • ~42 MB • ETA 38s • You can close this and we'll email you.</p>
+        </div>
+        <div id="exportDone" style="display:none">
+            <div class="hr"></div>
+            <p style="color:#6ee7b7;font-weight:700">✓ Render complete — 4K 60fps</p>
+            <p class="small" style="margin-top:6px">scripto_cannes_launch_4k.mp4 • 41.7 MB • 0:28</p>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px">
+                <button class="btn" onclick="closeExport()">Close</button>
+                <button class="btn btn-primary" onclick="toast('Download started (demo)')">Download MP4</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PAYMENT MODAL - PhonePe / Google Pay / UPI -->
+<div class="modal-backdrop" id="payModal" onclick="if(event.target===this) closePay()">
+    <div class="modal" style="max-width:560px">
+        <div style="display:flex;justify-content:space-between;align-items:start">
+            <div>
+                <h3 id="payTitle">Upgrade to Plus</h3>
+                <p class="small" id="paySub" style="margin-top:4px">Secure checkout • Instant activation</p>
+            </div>
+            <button class="btn" style="padding:6px 12px" onclick="closePay()">✕</button>
+        </div>
+
+        <div style="background:#101025;border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:14px;display:flex;justify-content:space-between;align-items:center">
+            <div>
+                <div style="font-size:13px;color:var(--muted)" id="payPlanName">Scripto Plus – Monthly</div>
+                <strong style="font-size:20px" id="payAmount">$20 / ₹1,699</strong>
+            </div>
+            <div class="small" style="text-align:right">GST 18% extra for India<br>Cancel anytime</div>
+        </div>
+
+        <div class="pay-grid">
+            <button class="pay-btn" onclick="payWithRazorpay()">
+                <div class="pay-icon">💳</div>
+                <div>Pay with Razorpay
+                    <small>UPI • GPay • PhonePe • Cards • NetBanking</small>
+                </div>
+            </button>
+            <button class="pay-btn" onclick="upiIntent('gpay')">
+                <div class="pay-icon" style="color:#4285F4">G</div>
+                <div>Google Pay
+                    <small>Open GPay app directly</small>
+                </div>
+            </button>
+            <button class="pay-btn" onclick="upiIntent('phonepe')">
+                <div class="pay-icon" style="color:#5f259f">Pe</div>
+                <div>PhonePe
+                    <small>Open PhonePe app</small>
+                </div>
+            </button>
+            <button class="pay-btn" onclick="upiIntent('paytm')">
+                <div class="pay-icon" style="color:#00baf2">Pay</div>
+                <div>Paytm UPI
+                    <small>Open Paytm app</small>
+                </div>
+            </button>
+        </div>
+
+        <div class="upi-box">
+            <div style="font-size:12.5px;color:var(--muted);margin-bottom:6px">Or scan with any UPI app</div>
+            <div class="qr-fake"></div>
+            <div style="margin-top:8px;font-size:13px"><strong id="upiAmountText">₹1,699</strong> • UPI ID: <code>scripto@razorpay</code></div>
+            <p class="small" style="margin-top:6px">UPI QR updates automatically for your plan. Demo QR shown.</p>
+        </div>
+
+        <div class="hr"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center">
+            <p class="small">Secure by Razorpay • PCI-DSS • UPI Autopay supported • GST invoice instantly</p>
+            <button class="btn" onclick="closePay()">Close</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+
+function go(view){
+  $$('.view').forEach(v=>v.classList.remove('active'));
+  $('#view-'+view).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function toast(msg){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2100);
+}
+
+// mini preview subtitle
+function updatePreviewSubtitle(v){
+  const first = v.split('\n').find(x=>x.trim()) || 'The future of video is text-first.';
+  $('#previewSubtitle').textContent = first.slice(0,84);
+}
+
+// studio tabs
+$$('#studioTabs .studio-tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    $$('#studioTabs .studio-tab').forEach(x=>x.classList.remove('active'));
+    tab.classList.add('active');
+    $$('.tab-pane').forEach(p=>p.style.display='none');
+    $('#tab-'+tab.dataset.tab).style.display='block';
+  });
+});
+
+// word count
+const studioScript = $('#studioScript');
+function updateCounts(){
+  if(!studioScript) return;
+  const words = studioScript.value.trim().split(/\s+/).filter(Boolean).length;
+  $('#wordCount').textContent = words + ' words';
+  $('#readTime').textContent = '≈ 0:' + Math.max(12, Math.round(words/2.8)).toString().padStart(2,'0') + ' read';
+}
+if(studioScript){ studioScript.addEventListener('input', updateCounts); updateCounts(); }
+
+// scenes mock
+const defaultScenes = [
+  ['Hook','Stop wasting 8 hours editing a 60 second video.'],
+  ['Problem','Script to video tools look cheap. Robotic voices. Stocky stock. 1080p max.'],
+  ['Solution','Meet Scripto. Paste your script. Auto B-roll, ultra-real voices, captions, 4K.'],
+  ['Proof','43,000 creators, 2.1M videos rendered last month.'],
+  ['CTA','Start free at scripto.ai. Plus $20 / ₹1,699, Pro $38.75 / ₹3,299.']
+];
+function renderScenes(){
+  const el = $('#sceneList');
+  if(!el) return;
+  el.innerHTML = '';
+  defaultScenes.forEach((s,i)=>{
+    const d=document.createElement('div');
+    d.className='scene'+(i===0?' active':'');
+    d.innerHTML = `<small>Scene ${i+1} • ${s[0]}</small><div style="margin-top:4px">${s[1]}</div>`;
+    d.onclick = ()=>{
+      $$('.scene').forEach(x=>x.classList.remove('active'));
+      d.classList.add('active');
+      $('#studioSubtitle').textContent = s[1];
+      $('#sceneLabel').textContent = `Scene ${i+1} / ${defaultScenes.length}`;
+    };
+    el.appendChild(d);
+  });
+}
+renderScenes();
+
+function splitScenes(){ toast('Scenes re-split from script. 5 scenes found.'); renderScenes(); }
+function aiEnhance(){ 
+  toast('AI enhanced script — tightened hook, added proof.');
+  if(studioScript) studioScript.value = studioScript.value.replace('Stop wasting','Stop burning');
+  updateCounts();
+}
+function aiHook(){ toast('5 hooks generated — check the Script panel (demo)'); }
+function addScene(){ defaultScenes.push(['New','Your new scene text...']); renderScenes(); toast('Scene added'); }
+
+$$('.voice-grid').forEach(grid=>{
+  grid.addEventListener('click', e=>{
+    const v = e.target.closest('.voice');
+    if(!v) return;
+    grid.querySelectorAll('.voice').forEach(x=>x.classList.remove('active'));
+    v.classList.add('active');
+    toast('Voice: ' + v.textContent);
+  });
+});
+
+// export modal
+function openExport(){ $('#exportModal').classList.add('open'); }
+function closeExport(){
+  $('#exportModal').classList.remove('open');
+  $('#exportIdle').style.display='block';
+  $('#exportRunning').style.display='none';
+  $('#exportDone').style.display='none';
+}
+function startExport(){
+  $('#exportIdle').style.display='none';
+  $('#exportRunning').style.display='block';
+  let pct=0;
+  const bar=$('#exportBar'), pctEl=$('#exportPct'), statusEl=$('#exportStatus');
+  const phases = ['Queuing GPU…','Synthesizing voice…','Matching B-roll…','Rendering 4K frames…','Encoding H.265…','Muxing captions…','Finalizing…'];
+  const iv = setInterval(()=>{
+    pct += Math.random()*14 + 5;
+    if(pct>100) pct=100;
+    bar.style.width = pct+'%';
+    pctEl.textContent = Math.round(pct)+'%';
+    statusEl.textContent = phases[Math.min(phases.length-1, Math.floor(pct/15))];
+    if(pct>=100){
+      clearInterval(iv);
+      setTimeout(()=>{
+        $('#exportRunning').style.display='none';
+        $('#exportDone').style.display='block';
+      }, 350);
+    }
+  }, 320);
+}
+
+// --- PAYMENTS: PhonePe / Google Pay / UPI ---
+const PLANS = {
+  Plus: { usd: 20, inr: 1699, name: 'Scripto Plus' },
+  Pro: { usd: 38.75, inr: 3299, name: 'Scripto Pro' }
+};
+let currentPlan = 'Plus';
+let currentCurrency = 'INR'; // default to INR for India
+
+function checkout(plan){
+  currentPlan = plan;
+  const p = PLANS[plan];
+  $('#payTitle').textContent = 'Upgrade to ' + plan;
+  $('#payPlanName').textContent = p.name + ' – Monthly';
+  $('#payAmount').textContent = `$${p.usd} / ₹${p.inr.toLocaleString('en-IN')}`;
+  $('#upiAmountText').textContent = '₹' + p.inr.toLocaleString('en-IN');
+  $('#payModal').classList.add('open');
+}
+function closePay(){ $('#payModal').classList.remove('open'); }
+
+// Razorpay Checkout - handles UPI, GPay, PhonePe, Cards, NetBanking in one flow
+function payWithRazorpay(){
+  const p = PLANS[currentPlan];
+  const amountInPaise = (currentCurrency === 'INR' ? p.inr : Math.round(p.usd*83)) * 100;
+
+  // NOTE: Replace 'rzp_test_xxxxxxxxxx' with your real Razorpay Key ID
+  // Create an order on your backend first for production. This is a demo client-side flow.
+  const options = {
+    key: "rzp_test_xxxxxxxxxx",
+    amount: amountInPaise,
+    currency: "INR",
+    name: "Scripto 4K",
+    description: p.name + " – Monthly",
+    image: "https://via.placeholder.com/120",
+    handler: function (response){
+      toast("Payment success! ID: " + response.razorpay_payment_id);
+      closePay();
+    },
+    prefill: { name: "", email: "", contact: "" },
+    notes: { plan: currentPlan },
+    theme: { color: "#7c3aed" },
+    method: {
+      upi: true,
+      card: true,
+      netbanking: true,
+      wallet: true
+    }
+  };
+  try {
+    const rzp = new Razorpay(options);
+    rzp.on('payment.failed', function(){ toast("Payment failed / cancelled"); });
+    rzp.open();
+  } catch(e){
+    toast("Add your Razorpay Key in payWithRazorpay() – opening demo UPI instead");
+    upiIntent('gpay');
+  }
+}
+
+// Direct UPI Intent - opens PhonePe / GPay / Paytm app on mobile
+function upiIntent(app){
+  const p = PLANS[currentPlan];
+  const amount = p.inr;
+  const upiId = "scripto@razorpay"; // <-- replace with your UPI ID / VPA
+  const name = "Scripto AI Labs";
+  const note = encodeURIComponent(`Scripto ${currentPlan} Monthly`);
+  const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(name)}&am=${amount}&cu=INR&tn=${note}`;
+
+  // App-specific deep links
+  let intentUrl = upiUrl;
+  if(app === 'phonepe') intentUrl = `phonepe://pay?pa=${upiId}&pn=${encodeURIComponent(name)}&am=${amount}&cu=INR&tn=${note}`;
+  if(app === 'gpay') intentUrl = `tez://upi/pay?pa=${upiId}&pn=${encodeURIComponent(name)}&am=${amount}&cu=INR&tn=${note}`;
+  if(app === 'paytm') intentUrl = `paytmmp://pay?pa=${upiId}&pn=${encodeURIComponent(name)}&am=${amount}&cu=INR&tn=${note}`;
+
+  // Try to open app, fallback to generic UPI
+  window.location.href = intentUrl;
+  setTimeout(()=> {
+    toast((app==='gpay'?'Google Pay':app==='phonepe'?'PhonePe':'Paytm') + ` UPI link copied – ₹${amount}. If app didn't open, scan the QR.`);
+    navigator.clipboard && navigator.clipboard.writeText(upiUrl).catch(()=>{});
+  }, 600);
+}
+
+function setCurrency(cur){
+  currentCurrency = cur;
+  document.querySelectorAll('.p-amt').forEach(el=>{
+    el.textContent = cur === 'INR' ? el.dataset.inr : el.dataset.usd;
+  });
+  document.querySelectorAll('.p-amt-inline').forEach(el=>{
+    el.textContent = cur === 'INR' ? el.dataset.inr : el.dataset.usd;
+  });
+  document.querySelectorAll('.currency-toggle').forEach(toggle=>{
+    toggle.querySelectorAll('button').forEach(b=> b.classList.toggle('active', b.dataset.cur === cur));
+  });
+}
+// currency toggle handlers
+document.querySelectorAll('.currency-toggle').forEach(toggle=>{
+  toggle.addEventListener('click', e=>{
+    const btn = e.target.closest('button[data-cur]');
+    if(btn) setCurrency(btn.dataset.cur);
+  });
+});
+// default INR for India
+setCurrency('INR');
+
+function playStudio(){
+  toast('Playing preview… (demo)');
+}
+
+document.addEventListener('click', e=>{
+  const chip = e.target.closest('.chip');
+  if(chip && chip.parentElement.classList.contains('chips')){
+    [...chip.parentElement.querySelectorAll('.chip')].forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+  }
+});
+</script>
+</body>
+</html>
